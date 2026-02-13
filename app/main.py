@@ -22,3 +22,4 @@ async def analyze_goal(request: GoalRequest):
         "research": research,
         "decision": decision
     }
+#fewfee
