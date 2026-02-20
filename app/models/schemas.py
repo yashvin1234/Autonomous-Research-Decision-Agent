@@ -1,9 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
 class GoalRequest(BaseModel):
     goal: str
-    session_id: str
+    chat_id: Optional[int] = None
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str
 
 class PlannerOutput(BaseModel):
     intent: str
@@ -22,3 +26,10 @@ class DecisionOutput(BaseModel):
     final_recommendation: str
     confidence_score: float
     key_risks: List[str]
+
+class RepoRequest(BaseModel):
+    repo_url: str
+
+class AskRepoRequest(BaseModel):
+    repo_id: int
+    question: str

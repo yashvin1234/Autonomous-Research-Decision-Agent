@@ -1,0 +1,33 @@
+.input-box {
+  display: flex;
+  gap: 10px;
+}
+
+.input-box input {
+  flex: 1;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #dcdcdc;
+  font-size: 15px;
+}
+
+.input-box input:focus {
+  outline: none;
+  border-color: #2f6fed;
+}
+
+.input-box button {
+  background: #2f6fed;
+  color: white;
+  border: none;
+  padding: 0 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.input-box button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+

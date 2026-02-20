@@ -4,6 +4,7 @@ from langchain_core.messages import HumanMessage
 
 from app.services.llm import get_llm
 from app.models.schemas import DecisionOutput, PlannerOutput, ResearchFinding
+from app.services.memory import build_chat_input
 
 parser = PydanticOutputParser(pydantic_object=DecisionOutput)
 
@@ -36,7 +37,7 @@ Return only valid JSON.
     partial_variables={"format_instructions": parser.get_format_instructions()}
 )
 
-def run_decision(plan: PlannerOutput, research_findings: list[ResearchFinding]):
+def run_decision(plan: PlannerOutput, research_findings: list[ResearchFinding], session_id: str):
 
     llm = get_llm(temperature=0.2)
 
@@ -54,9 +55,9 @@ def run_decision(plan: PlannerOutput, research_findings: list[ResearchFinding]):
         research=research_text
     )
 
-    response = llm.invoke([
-        HumanMessage(content=formatted_prompt)
-    ])
+    messages = build_chat_input(session_id, formatted_prompt)
+
+    response = llm.invoke(messages)
 
     try:
         parsed = parser.parse(response.content)

@@ -1,0 +1,27 @@
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 10px;
+  background: #fafafa;
+}
+
+.card h3 {
+  margin-bottom: 8px;
+}
+
+.list {
+  margin-left: 18px;
+}
+
+.research-item {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 8px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.summary {
+  margin-top: 6px;
+  color: #374151;
+}

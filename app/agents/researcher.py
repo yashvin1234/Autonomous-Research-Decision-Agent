@@ -2,6 +2,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage
 
 from app.services.llm import get_llm
+from app.services.memory import build_chat_input
 from app.services.web_search import search_web
 from app.models.schemas import ResearchFinding, PlannerOutput
 
@@ -21,7 +22,7 @@ Provide a concise but information-rich summary.
     input_variables=["search_results"]
 )
 
-def run_research(plan: PlannerOutput):
+def run_research(plan: PlannerOutput, session_id: str):
 
     llm = get_llm(temperature=0.3)
 
@@ -39,10 +40,9 @@ def run_research(plan: PlannerOutput):
         formatted_prompt = summary_prompt.format(
             search_results=combined_content
         )
+        messages = build_chat_input(session_id, formatted_prompt)
 
-        response = llm.invoke([
-            HumanMessage(content=formatted_prompt)
-        ])
+        response = llm.invoke(messages)
 
         findings.append(
             ResearchFinding(
