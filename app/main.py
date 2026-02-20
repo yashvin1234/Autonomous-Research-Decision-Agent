@@ -1,25 +1,29 @@
 from fastapi import FastAPI
 
-from app.agents.decision import run_decision
-from app.agents.planner import run_planner
-from app.agents.researcher import run_research
-from app.models.schemas import GoalRequest
+from fastapi.middleware.cors import CORSMiddleware
+from app.routes import chat
+from app.routes import user
+from app.routes import repo
+# from app.db.init_db import init_db
+
 
 app = FastAPI(title="Autonomous Research & Decision Agent")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # for dev (later restrict)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+app.include_router(chat.router)
+app.include_router(user.router)
+app.include_router(repo.router)
 
 @app.get("/")
 def health_check():
     return {"status": "running"}
 
-@app.post("/analyze")
-async def analyze_goal(request: GoalRequest):
-    plan = run_planner(request.goal)
-    research = run_research(plan)
-    decision = run_decision(plan, research)
-
-    return {
-        "plan": plan,
-        "research": research,
-        "decision": decision
-    }
 #fewfee

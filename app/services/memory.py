@@ -1,20 +1,29 @@
 from typing import Dict, List
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 
-# Simple in-memory store
-conversation_store: Dict[str, List] = {}
+conversation_store: Dict[str, List[BaseMessage]] = {}
 
 
-def get_conversation(session_id: str):
+def get_history(session_id: str) -> List[BaseMessage]:
+    """Return history for session"""
     return conversation_store.get(session_id, [])
 
 
-def append_message(session_id: str, message):
-    if session_id not in conversation_store:
-        conversation_store[session_id] = []
-
-    conversation_store[session_id].append(message)
+def add_user_message(session_id: str, message: str):
+    conversation_store.setdefault(session_id, [])
+    conversation_store[session_id].append(HumanMessage(content=message))
 
 
-def clear_conversation(session_id: str):
-    conversation_store.pop(session_id, None)
+def add_ai_message(session_id: str, message: str):
+    conversation_store.setdefault(session_id, [])
+    conversation_store[session_id].append(AIMessage(content=message))
+
+
+def build_chat_input(session_id: str, new_input: str):
+    """
+    Returns messages list ready for LLM invoke
+    DOES NOT store anything
+    """
+    history = get_history(session_id)
+    return history + [HumanMessage(content=new_input)]
+
