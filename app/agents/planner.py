@@ -5,6 +5,7 @@ from langchain_core.messages import HumanMessage
 from app.services.llm import get_llm
 from app.models.schemas import PlannerOutput
 from app.services.memory import build_chat_input
+from sqlalchemy.orm import Session
 
 parser = PydanticOutputParser(pydantic_object=PlannerOutput)
 
@@ -30,12 +31,12 @@ Only return valid JSON.
     partial_variables={"format_instructions": parser.get_format_instructions()}
 )
 
-def run_planner(goal: str, session_id: str) -> PlannerOutput:
+def run_planner(goal: str, chat_id: int, db: Session) -> PlannerOutput:
     llm = get_llm(temperature=0.2)
 
     formatted_prompt = planner_prompt.format(goal=goal)
 
-    messages = build_chat_input(session_id, formatted_prompt)
+    messages = build_chat_input(db, chat_id, formatted_prompt)
 
     response = llm.invoke(messages)
 

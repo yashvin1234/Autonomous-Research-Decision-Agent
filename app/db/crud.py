@@ -31,7 +31,12 @@ def get_chat(db: Session, chat_id: int):
 
 
 def get_chat_messages(db: Session, chat_id: int):
-    return db.query(Message).filter(Message.chat_id == chat_id).all()
+    return (
+        db.query(Message)
+        .filter(Message.chat_id == chat_id)
+        .order_by(Message.created_at.asc())  # important!
+        .all()
+    )
 
 
 # ---------- MESSAGE ----------
@@ -41,3 +46,11 @@ def add_message(db: Session, chat_id: int, role: str, content: str):
     db.commit()
     db.refresh(msg)
     return msg
+
+def get_user_chats(db: Session, user_id: int):
+    return (
+        db.query(Chat)
+        .filter(Chat.user_id == user_id)
+        .order_by(Chat.created_at.desc())
+        .all()
+    )
