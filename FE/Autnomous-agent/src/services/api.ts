@@ -79,3 +79,27 @@ export async function askRepo(repoId: number, question: string) {
   if (!res.ok) throw new Error("Repo query failed");
   return await res.json();
 }
+
+export async function getMyChats() {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_BASE}/chat/my-chats`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  return res.json();
+}
+
+export async function getChatMessages(chatId: number) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_BASE}/chat/${chatId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  return res.json();
+}

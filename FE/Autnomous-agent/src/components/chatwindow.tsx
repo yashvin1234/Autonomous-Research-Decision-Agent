@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/chat.css";
-import { runAgent, askRepo, loadRepo } from "../services/api";
+import { runAgent, askRepo, loadRepo, getChatMessages } from "../services/api";
 import type { PlannerOutput, ResearchFinding, DecisionOutput } from "../types/agent";
 import MessageBubble from "./messagebubble";
 import InputBox from "./inputbox";
@@ -19,6 +19,8 @@ type AgentData = {
 
 interface Props {
   mode: Mode;
+  chatId: number | null;
+  onNewChatCreated: () => void;
 }
 
 interface Message {
@@ -27,11 +29,37 @@ interface Message {
   data?: AgentData;
 }
 
-function ChatWindow({ mode }: Props) {
+function ChatWindow({ mode, chatId, onNewChatCreated }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [chatId, setChatId] = useState<number | null>(null);
+  const [internalChatId, setInternalChatId] = useState<number | null>(chatId);
   const [activeRepoId, setActiveRepoId] = useState<number | null>(null);
+
+  // 🔥 When sidebar changes chat
+  useEffect(() => {
+  console.log("chatId changed:", chatId);
+}, [chatId]);
+  useEffect(() => {
+    if (chatId === null) {
+      setMessages([]);
+      setInternalChatId(null);
+      return;
+    }
+
+    async function loadMessages() {
+      const data = await getChatMessages(chatId!);
+
+      const formatted: Message[] = data.map((msg: any) => ({
+        role: msg.role,
+        text: msg.content,
+      }));
+
+      setMessages(formatted);
+      setInternalChatId(chatId);
+    }
+
+    loadMessages();
+  }, [chatId]);
 
   const sendMessage = async (input: string) => {
     setMessages(prev => [...prev, { role: "user", text: input }]);
@@ -39,12 +67,18 @@ function ChatWindow({ mode }: Props) {
     setLoading(true);
 
     try {
-      // ===== AGENT MODE (UNCHANGED) =====
+      // ===== AGENT MODE =====
       if (mode === "agent") {
-        const response = await runAgent(input, chatId ?? undefined);
-        if (!chatId) setChatId(response.chat_id);
+        const response = await runAgent(input, internalChatId ?? undefined);
+
+        // If new chat was created
+        if (!internalChatId) {
+          setInternalChatId(response.chat_id);
+          onNewChatCreated(); // refresh sidebar
+        }
 
         setMessages(prev => prev.slice(0, -1));
+
         setMessages(prev => [
           ...prev,
           {
@@ -60,7 +94,6 @@ function ChatWindow({ mode }: Props) {
 
       // ===== REPO MODE =====
       else {
-        // Step 1 → load repo
         if (!activeRepoId) {
           const res = await loadRepo(input);
           setActiveRepoId(res.repo_id);
@@ -69,10 +102,7 @@ function ChatWindow({ mode }: Props) {
             ...prev.slice(0, -1),
             { role: "assistant", text: `Repo indexed. Ask your question.` },
           ]);
-        }
-
-        // Step 2 → ask question
-        else {
+        } else {
           const res = await askRepo(activeRepoId, input);
 
           setMessages(prev => [

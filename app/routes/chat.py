@@ -33,9 +33,9 @@ def run_agent(request: GoalRequest, db: Session = Depends(get_db), email: str = 
     crud.add_message(db, chat.id, "user", goal)
 
 
-    plan = run_planner(goal, chat.id)
-    research = run_research(plan, chat.id)
-    decision = run_decision(plan, research, chat.id)
+    plan = run_planner(goal, chat.id, db)
+    research = run_research(plan, chat.id,db)
+    decision = run_decision(plan, research, chat.id,db)
 
     crud.add_message(db, chat.id, "assistant", decision.final_recommendation)
 
@@ -46,5 +46,36 @@ def run_agent(request: GoalRequest, db: Session = Depends(get_db), email: str = 
         "decision": decision
     }
 
+@router.get("/my-chats")
+def list_chats(db: Session = Depends(get_db), email: str = Depends(get_current_user)):
+    user = crud.get_user_by_email(db, email)
 
+    chats = crud.get_user_chats(db, user.id)
 
+    return [
+        {
+            "id": chat.id,
+            "title": chat.title,
+            "created_at": chat.created_at
+        }
+        for chat in chats
+    ]
+
+@router.get("/{chat_id}")
+def get_chat(chat_id: int, db: Session = Depends(get_db), email: str = Depends(get_current_user)):
+    user = crud.get_user_by_email(db, email)
+
+    chat = crud.get_chat(db, chat_id)
+
+    if not chat or chat.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    messages =crud.get_chat_messages(db, chat_id)
+
+    return [
+        {
+            "role": msg.role,
+            "content": msg.content
+        }
+        for msg in messages
+    ]

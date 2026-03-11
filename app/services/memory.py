@@ -1,29 +1,21 @@
-from typing import Dict, List
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langchain_core.messages import HumanMessage, AIMessage
+from sqlalchemy.orm import Session
 
-conversation_store: Dict[str, List[BaseMessage]] = {}
+from app.db.crud import get_chat_messages
 
+def build_chat_input(db: Session, chat_id: int, new_input: str):
 
-def get_history(session_id: str) -> List[BaseMessage]:
-    """Return history for session"""
-    return conversation_store.get(session_id, [])
+    history = get_chat_messages(db, chat_id)
 
+    messages = []
 
-def add_user_message(session_id: str, message: str):
-    conversation_store.setdefault(session_id, [])
-    conversation_store[session_id].append(HumanMessage(content=message))
+    for msg in history:
+        if msg.role == "user":
+            messages.append(HumanMessage(content=msg.content))
+        elif msg.role == "assistant":
+            messages.append(AIMessage(content=msg.content))
 
+    # add current user input (not stored yet)
+    messages.append(HumanMessage(content=new_input))
 
-def add_ai_message(session_id: str, message: str):
-    conversation_store.setdefault(session_id, [])
-    conversation_store[session_id].append(AIMessage(content=message))
-
-
-def build_chat_input(session_id: str, new_input: str):
-    """
-    Returns messages list ready for LLM invoke
-    DOES NOT store anything
-    """
-    history = get_history(session_id)
-    return history + [HumanMessage(content=new_input)]
-
+    return messages
